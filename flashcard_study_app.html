@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Study App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --font-size-multiplier: 1.2;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-size: calc(1em * var(--font-size-multiplier));
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: calc(2.7em * var(--font-size-multiplier));
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            color: white;
+            font-weight: 600;
+            font-size: calc(1em * var(--font-size-multiplier));
+        }
+
+        .font-slider {
+            width: 150px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .import-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .import-section h2 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: calc(1.5em * var(--font-size-multiplier));
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            flex: 1;
+            padding: 10px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: calc(1em * var(--font-size-multiplier));
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: calc(1em * var(--font-size-multiplier));
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .filter-section h2 {
+            font-size: calc(1.5em * var(--font-size-multiplier));
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: calc(1em * var(--font-size-multiplier));
+        }
+
+        select {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: calc(1.2em * var(--font-size-multiplier));
+            cursor: pointer;
+        }
+
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: calc(2.3em * var(--font-size-multiplier));
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: calc(1em * var(--font-size-multiplier));
+        }
+
+        .flashcard {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            min-height: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+            position: relative;
+        }
+
+        .flashcard:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .card-id {
+            font-size: calc(1.2em * var(--font-size-multiplier));
+            color: #666;
+        }
+
+        .card-domain {
+            font-weight: bold;
+            color: #667eea;
+            font-size: calc(1.2em * var(--font-size-multiplier));
+        }
+
+        .card-subdomain {
+            color: #764ba2;
+            font-size: calc(1.1em * var(--font-size-multiplier));
+            margin-bottom: 20px;
+        }
+
+        .card-content {
+            font-size: calc(1.2em * var(--font-size-multiplier));
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .choices {
+            display: grid;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .choice {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: calc(1.2em * var(--font-size-multiplier));
+        }
+
+        .choice:hover {
+            background: #f7fafc;
+            border-color: #667eea;
+        }
+
+        .choice.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .choice.correct {
+            background: #48bb78;
+            color: white;
+            border-color: #48bb78;
+        }
+
+        .choice.incorrect {
+            background: #f56565;
+            color: white;
+            border-color: #f56565;
+        }
+
+        .explanation {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+            font-size: calc(1.2em * var(--font-size-multiplier));
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .explanation strong {
+            color: #667eea;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .flip-indicator {
+            text-align: center;
+            color: #666;
+            font-size: calc(0.9em * var(--font-size-multiplier));
+            margin-top: 10px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .auto-show-message {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+            margin-top: 10px;
+            font-size: calc(0.9em * var(--font-size-multiplier));
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: calc(2em * var(--font-size-multiplier));
+            }
+
+            .flashcard {
+                padding: 20px;
+                min-height: 300px;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Flashcard Study App</h1>
+            <p>Master Stage 7</p>
+        </div>
+
+        <div class="controls" id="controls" style="display: none;">
+            <div class="control-group">
+                <label for="fontSize">Font Size:</label>
+                <input type="range" id="fontSize" class="font-slider" min="0.8" max="1.6" step="0.05" value="1" oninput="updateFontSize(this.value)">
+                <span id="fontSizeValue">100%</span>
+            </div>
+            <div class="control-group">
+                <label>Random Mode:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="randomMode" onchange="toggleRandomMode()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="import-section">
+            <h2>📁 Import Your Questions</h2>
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept=".json" />
+                <button class="btn btn-primary" onclick="loadFile()">Load Questions</button>
+            </div>
+            <p style="color: #666; font-size: calc(1em * var(--font-size-multiplier)); margin-top: 10px;">
+                Upload a JSON file 
+            </p>
+        </div>
+
+        <div class="filter-section" id="filterSection" style="display: none;">
+            <h2>🔍 Filter Questions</h2>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="domainSelect">Domain:</label>
+                    <select id="domainSelect" onchange="updateSubdomains()">
+                        <option value="">All Domains</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="subdomainSelect">Subdomain:</label>
+                    <select id="subdomainSelect" onchange="filterQuestions()">
+                        <option value="">All Subdomains</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="practiceTestSelect">Practice Test:</label>
+                    <select id="practiceTestSelect" onchange="filterQuestions()">
+                        <option value="">All Tests</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="totalQuestions">0</div>
+                <div class="stat-label">Total Questions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="currentPosition">0</div>
+                <div class="stat-label">Current</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="correctCount">0</div>
+                <div class="stat-label">Correct</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="incorrectCount">0</div>
+                <div class="stat-label">Incorrect</div>
+            </div>
+        </div>
+
+        <div id="flashcardContainer">
+            <div class="no-data">
+                <h2>👆 Please import a JSON file to begin</h2>
+                <p>Your flashcards will appear here</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DOMAINS = {
+            1: "Security and Risk Management",
+            2: "Asset Security",
+            3: "Security Architecture and Engineering",
+            4: "Communication and Network Security",
+            5: "Identity and Access Management (IAM)",
+            6: "Security Assessment and Testing",
+            7: "Security Operations",
+            8: "Software Development Security"
+        };
+
+        let allQuestions = [];
+        let filteredQuestions = [];
+        let currentIndex = 0;
+        let showingAnswer = false;
+        let selectedAnswer = null;
+        let stats = { correct: 0, incorrect: 0 };
+        let isRandomMode = false;
+        let shuffledIndices = [];
+
+        // Hàm định dạng văn bản, xử lý các thẻ <liA>, <liB>,...
+        function formatText(text) {
+            if (!text) return '';
+            
+            // Xử lý các thẻ <liA>, <liB>,...
+            let formattedText = text.replace(/<li([A-Z])>/g, '<br><strong>$1.</strong> ');
+            
+            // Xử lý các thẻ <li> thông thường
+            formattedText = formattedText.replace(/<li>/g, '<br>• ');
+            
+            return formattedText;
+        }
+
+        // Cập nhật kích thước font chữ
+        function updateFontSize(value) {
+            document.documentElement.style.setProperty('--font-size-multiplier', value);
+            document.getElementById('fontSizeValue').textContent = Math.round(value * 100) + '%';
+        }
+
+        // Chuyển đổi chế độ random
+        function toggleRandomMode() {
+            isRandomMode = document.getElementById('randomMode').checked;
+            
+            if (isRandomMode && filteredQuestions.length > 0) {
+                // Tạo mảng chỉ số ngẫu nhiên
+                shuffledIndices = Array.from({length: filteredQuestions.length}, (_, i) => i);
+                shuffleArray(shuffledIndices);
+                currentIndex = 0;
+            }
+            
+            displayCard();
+        }
+
+        // Hàm xáo trộn mảng (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Lấy chỉ số thực tế dựa trên chế độ
+        function getActualIndex(index) {
+            if (isRandomMode && shuffledIndices.length > 0) {
+                return shuffledIndices[index];
+            }
+            return index;
+        }
+
+        function loadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file first');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    allQuestions = Array.isArray(data) ? data : [data];
+                    filteredQuestions = [...allQuestions];
+                    
+                    initializeFilters();
+                    currentIndex = 0;
+                    showingAnswer = false;
+                    selectedAnswer = null;
+                    stats = { correct: 0, incorrect: 0 };
+                    
+                    document.getElementById('filterSection').style.display = 'block';
+                    document.getElementById('stats').style.display = 'flex';
+                    document.getElementById('controls').style.display = 'flex';
+                    
+                    // Reset chế độ random
+                    isRandomMode = true;
+                    document.getElementById('randomMode').checked = true;
+                    
+                    displayCard();
+                    updateStats();
+                } catch (error) {
+                    alert('Error parsing JSON file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function initializeFilters() {
+            const domainSelect = document.getElementById('domainSelect');
+            const practiceTestSelect = document.getElementById('practiceTestSelect');
+            
+            domainSelect.innerHTML = '<option value="">All Domains</option>';
+            Object.entries(DOMAINS).forEach(([id, name]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `${id}. ${name}`;
+                domainSelect.appendChild(option);
+            });
+
+            const practiceTests = [...new Set(allQuestions.map(q => q.practice_test_id))].sort((a, b) => a - b);
+            practiceTestSelect.innerHTML = '<option value="">All Tests</option>';
+            practiceTests.forEach(testId => {
+                const option = document.createElement('option');
+                option.value = testId;
+                option.textContent = `Practice Test ${testId}`;
+                practiceTestSelect.appendChild(option);
+            });
+        }
+
+        function updateSubdomains() {
+            const domainSelect = document.getElementById('domainSelect');
+            const subdomainSelect = document.getElementById('subdomainSelect');
+            const selectedDomain = domainSelect.value;
+
+            let subdomains = [];
+            if (selectedDomain) {
+                subdomains = [...new Set(allQuestions
+                    .filter(q => q.topic_id == selectedDomain)
+                    .map(q => q.sub_domain))].sort();
+            } else {
+                subdomains = [...new Set(allQuestions.map(q => q.sub_domain))].sort();
+            }
+
+            subdomainSelect.innerHTML = '<option value="">All Subdomains</option>';
+            subdomains.forEach(subdomain => {
+                const option = document.createElement('option');
+                option.value = subdomain;
+                option.textContent = subdomain;
+                subdomainSelect.appendChild(option);
+            });
+
+            filterQuestions();
+        }
+
+        function filterQuestions() {
+            const domainSelect = document.getElementById('domainSelect');
+            const subdomainSelect = document.getElementById('subdomainSelect');
+            const practiceTestSelect = document.getElementById('practiceTestSelect');
+
+            filteredQuestions = allQuestions.filter(q => {
+                if (domainSelect.value && q.topic_id != domainSelect.value) return false;
+                if (subdomainSelect.value && q.sub_domain !== subdomainSelect.value) return false;
+                if (practiceTestSelect.value && q.practice_test_id != practiceTestSelect.value) return false;
+                return true;
+            });
+
+            // Tạo mảng chỉ số ngẫu nhiên nếu đang ở chế độ random
+            if (isRandomMode) {
+                shuffledIndices = Array.from({length: filteredQuestions.length}, (_, i) => i);
+                shuffleArray(shuffledIndices);
+            }
+
+            currentIndex = 0;
+            showingAnswer = false;
+            selectedAnswer = null;
+            displayCard();
+            updateStats();
+        }
+
+        function displayCard() {
+            if (filteredQuestions.length === 0) {
+                document.getElementById('flashcardContainer').innerHTML = `
+                    <div class="no-data">
+                        <h2>No questions match your filters</h2>
+                        <p>Try adjusting your filter settings</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const actualIndex = getActualIndex(currentIndex);
+            const question = filteredQuestions[actualIndex];
+            const domainName = DOMAINS[question.topic_id] || 'Unknown Domain';
+
+            let choicesHtml = '';
+            const choices = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
+            choices.forEach(letter => {
+                const choiceKey = `choice_${letter}`;
+                if (question[choiceKey]) {
+                    let choiceClass = 'choice';
+                    if (showingAnswer) {
+                        if (letter === question.correct_answer.toLowerCase()) {
+                            choiceClass += ' correct';
+                        } else if (selectedAnswer === letter) {
+                            choiceClass += ' incorrect';
+                        }
+                    } else if (selectedAnswer === letter) {
+                        choiceClass += ' selected';
+                    }
+                    
+                    choicesHtml += `
+                        <div class="${choiceClass}" onclick="selectAnswer('${letter}')">
+                            <strong>${letter.toUpperCase()})</strong> ${formatText(question[choiceKey])}
+                        </div>
+                    `;
+                }
+            });
+
+            // Always show explanation if answer has been selected
+            const explanationHtml = showingAnswer ? `
+                <div class="explanation">
+                    <strong>Explanation:</strong><br>
+                    ${formatText(question.explanation)}
+                </div>
+            ` : '';
+
+            // Show a message about auto-show feature
+            const autoShowMessage = !showingAnswer && !selectedAnswer ? `
+                <div class="auto-show-message">
+                     
+                </div>
+            ` : '';
+
+            document.getElementById('flashcardContainer').innerHTML = `
+                <div class="flashcard">
+                    <div class="card-header">
+                        <span class="card-id">Question #${question.id} ${isRandomMode ? '🔀' : ''}</span>
+                        <span class="card-domain">${domainName}</span>
+                    </div>
+                    <div class="card-subdomain">${question.sub_domain}</div>
+                    <div class="card-content">${formatText(question.question)}</div>
+                    <div class="choices">${choicesHtml}</div>
+                    ${explanationHtml}
+                    ${autoShowMessage}
+                    <div class="navigation">
+                        <button class="btn btn-secondary" onclick="previousCard()" ${currentIndex === 0 ? 'disabled' : ''}>
+                            ← Previous
+                        </button>
+                        <button class="btn btn-primary" onclick="nextCard()">
+                            Next Question →
+                        </button>
+                        <button class="btn btn-secondary" onclick="markCorrect()" ${!showingAnswer ? 'disabled' : ''}>
+                            ✓ Mark Correct
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectAnswer(letter) {
+            if (showingAnswer) return;
+            
+            selectedAnswer = letter;
+            showingAnswer = true;
+            
+            const actualIndex = getActualIndex(currentIndex);
+            const question = filteredQuestions[actualIndex];
+            
+            // Update stats immediately
+            if (selectedAnswer === question.correct_answer.toLowerCase()) {
+                stats.correct++;
+            } else {
+                stats.incorrect++;
+            }
+            
+            updateStats();
+            displayCard();
+        }
+
+        function markCorrect() {
+            if (!showingAnswer) return;
+            
+            // If user marks as correct manually
+            const actualIndex = getActualIndex(currentIndex);
+            const question = filteredQuestions[actualIndex];
+            
+            // Only update if it was previously marked incorrect
+            if (selectedAnswer !== question.correct_answer.toLowerCase()) {
+                stats.incorrect--;
+                stats.correct++;
+                updateStats();
+            }
+            
+            nextCard();
+        }
+
+        function nextCard() {
+            if (currentIndex < filteredQuestions.length - 1) {
+                currentIndex++;
+                showingAnswer = false;
+                selectedAnswer = null;
+                displayCard();
+                updateStats();
+            } else {
+                // If at the end, loop back to beginning
+                currentIndex = 0;
+                showingAnswer = false;
+                selectedAnswer = null;
+                displayCard();
+                updateStats();
+            }
+        }
+
+        function previousCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showingAnswer = false;
+                selectedAnswer = null;
+                displayCard();
+                updateStats();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalQuestions').textContent = filteredQuestions.length;
+            document.getElementById('currentPosition').textContent = filteredQuestions.length > 0 ? currentIndex + 1 : 0;
+            document.getElementById('correctCount').textContent = stats.correct;
+            document.getElementById('incorrectCount').textContent = stats.incorrect;
+        }
+    </script>
+</body>
+</html>

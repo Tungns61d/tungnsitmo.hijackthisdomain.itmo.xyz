@@ -1,4 +1,3 @@
 # tungnsitmo.hijackthisdomain.itmo.xyz
-374805 
-Nguyen Son Tung 
-Welcome to Vietnam o_o
+[Go to the main page](flashcard_study_app.html)
+

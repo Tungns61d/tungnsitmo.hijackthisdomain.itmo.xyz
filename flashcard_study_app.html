@@ -180,6 +180,7 @@
 
         .filter-section h2 {
             font-size: calc(1.5em * var(--font-size-multiplier));
+            margin-bottom: 15px;
         }
 
         .filter-grid {
@@ -201,12 +202,38 @@
             font-size: calc(1em * var(--font-size-multiplier));
         }
 
-        select {
+        select, input[type="text"] {
             padding: 10px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
+            font-size: calc(1em * var(--font-size-multiplier));
+        }
+
+        input[type="text"] {
+            width: 100%;
+        }
+
+        .keyword-search {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            grid-column: 1 / -1;
+        }
+
+        .keyword-search .filter-group {
+            flex: 1;
+        }
+
+        .search-icon {
+            color: #667eea;
             font-size: calc(1.2em * var(--font-size-multiplier));
-            cursor: pointer;
+        }
+
+        .search-hint {
+            color: #666;
+            font-size: calc(0.9em * var(--font-size-multiplier));
+            margin-top: 5px;
+            font-style: italic;
         }
 
         .stats {
@@ -346,13 +373,6 @@
             gap: 10px;
         }
 
-        .flip-indicator {
-            text-align: center;
-            color: #666;
-            font-size: calc(0.9em * var(--font-size-multiplier));
-            margin-top: 10px;
-        }
-
         .no-data {
             text-align: center;
             padding: 40px;
@@ -365,6 +385,29 @@
             font-style: italic;
             margin-top: 10px;
             font-size: calc(0.9em * var(--font-size-multiplier));
+        }
+
+        .keyword-highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .clear-keywords-btn {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: calc(1em * var(--font-size-multiplier));
+            transition: background 0.3s;
+            height: 42px;
+        }
+
+        .clear-keywords-btn:hover {
+            background: #e53e3e;
         }
 
         @media (max-width: 768px) {
@@ -384,6 +427,15 @@
             .controls {
                 flex-direction: column;
                 align-items: stretch;
+            }
+            
+            .keyword-search {
+                flex-direction: column;
+            }
+            
+            .clear-keywords-btn {
+                width: 100%;
+                margin-top: 5px;
             }
         }
     </style>
@@ -423,7 +475,18 @@
 
         <div class="filter-section" id="filterSection" style="display: none;">
             <h2>🔍 Filter Questions</h2>
+            
             <div class="filter-grid">
+                <div class="keyword-search">
+                    <div class="filter-group">
+                        <label for="keywordSearch"><span class="search-icon">🔎</span> Search by Keywords:</label>
+                        <input type="text" id="keywordSearch" placeholder="Enter keywords (separated by commas)" 
+                               oninput="filterQuestions()">
+                        <div class="search-hint">Searches in questions, choices, and explanations</div>
+                    </div>
+                    <button class="clear-keywords-btn" onclick="clearKeywords()">Clear</button>
+                </div>
+                
                 <div class="filter-group">
                     <label for="domainSelect">Domain:</label>
                     <select id="domainSelect" onchange="updateSubdomains()">
@@ -586,6 +649,7 @@
             const domainSelect = document.getElementById('domainSelect');
             const practiceTestSelect = document.getElementById('practiceTestSelect');
             
+            // Clear existing options
             domainSelect.innerHTML = '<option value="">All Domains</option>';
             Object.entries(DOMAINS).forEach(([id, name]) => {
                 const option = document.createElement('option');
@@ -594,7 +658,12 @@
                 domainSelect.appendChild(option);
             });
 
-            const practiceTests = [...new Set(allQuestions.map(q => q.practice_test_id))].sort((a, b) => a - b);
+            // Get unique practice test IDs
+            const practiceTests = [...new Set(allQuestions
+                .map(q => q.practice_test_id)
+                .filter(id => id !== undefined && id !== null)
+                .sort((a, b) => a - b))];
+            
             practiceTestSelect.innerHTML = '<option value="">All Tests</option>';
             practiceTests.forEach(testId => {
                 const option = document.createElement('option');
@@ -602,6 +671,9 @@
                 option.textContent = `Practice Test ${testId}`;
                 practiceTestSelect.appendChild(option);
             });
+
+            // Initialize subdomain select
+            updateSubdomains();
         }
 
         function updateSubdomains() {
@@ -612,10 +684,12 @@
             let subdomains = [];
             if (selectedDomain) {
                 subdomains = [...new Set(allQuestions
-                    .filter(q => q.topic_id == selectedDomain)
+                    .filter(q => q.topic_id == selectedDomain && q.sub_domain)
                     .map(q => q.sub_domain))].sort();
             } else {
-                subdomains = [...new Set(allQuestions.map(q => q.sub_domain))].sort();
+                subdomains = [...new Set(allQuestions
+                    .filter(q => q.sub_domain)
+                    .map(q => q.sub_domain))].sort();
             }
 
             subdomainSelect.innerHTML = '<option value="">All Subdomains</option>';
@@ -629,20 +703,71 @@
             filterQuestions();
         }
 
+        // Clear keywords search
+        function clearKeywords() {
+            document.getElementById('keywordSearch').value = '';
+            filterQuestions();
+        }
+
+        // Extract keywords from search input
+        function extractKeywords() {
+            const keywordInput = document.getElementById('keywordSearch').value.trim();
+            if (!keywordInput) {
+                return [];
+            }
+            
+            // Split by commas and trim each keyword
+            return keywordInput.split(',')
+                .map(keyword => keyword.trim().toLowerCase())
+                .filter(keyword => keyword.length > 0);
+        }
+
+        // Check if text contains any of the keywords
+        function containsKeywords(text, keywords) {
+            if (!text || !keywords.length) return false;
+            
+            const lowerText = text.toLowerCase();
+            return keywords.some(keyword => lowerText.includes(keyword));
+        }
+
         function filterQuestions() {
             const domainSelect = document.getElementById('domainSelect');
             const subdomainSelect = document.getElementById('subdomainSelect');
             const practiceTestSelect = document.getElementById('practiceTestSelect');
+            const keywords = extractKeywords();
 
             filteredQuestions = allQuestions.filter(q => {
+                // Apply domain filter
                 if (domainSelect.value && q.topic_id != domainSelect.value) return false;
+                
+                // Apply subdomain filter
                 if (subdomainSelect.value && q.sub_domain !== subdomainSelect.value) return false;
+                
+                // Apply practice test filter
                 if (practiceTestSelect.value && q.practice_test_id != practiceTestSelect.value) return false;
+                
+                // Apply keyword filter if any keywords are present
+                if (keywords.length > 0) {
+                    // Create searchable text from question, choices, and explanation
+                    const searchableText = [
+                        q.question || '',
+                        q.explanation || '',
+                        ...Object.keys(q)
+                            .filter(key => key.startsWith('choice_'))
+                            .map(key => q[key] || '')
+                    ].join(' ');
+
+                    // Check if the searchable text contains any of the keywords
+                    if (!containsKeywords(searchableText, keywords)) {
+                        return false;
+                    }
+                }
+                
                 return true;
             });
 
             // Tạo mảng chỉ số ngẫu nhiên nếu đang ở chế độ random
-            if (isRandomMode) {
+            if (isRandomMode && filteredQuestions.length > 0) {
                 shuffledIndices = Array.from({length: filteredQuestions.length}, (_, i) => i);
                 shuffleArray(shuffledIndices);
             }
@@ -656,9 +781,15 @@
 
         function displayCard() {
             if (filteredQuestions.length === 0) {
+                const keywords = extractKeywords();
+                let message = 'No questions match your filters';
+                if (keywords.length > 0) {
+                    message = `No questions found containing: ${keywords.join(', ')}`;
+                }
+                
                 document.getElementById('flashcardContainer').innerHTML = `
                     <div class="no-data">
-                        <h2>No questions match your filters</h2>
+                        <h2>${message}</h2>
                         <p>Try adjusting your filter settings</p>
                     </div>
                 `;
@@ -668,6 +799,7 @@
             const actualIndex = getActualIndex(currentIndex);
             const question = filteredQuestions[actualIndex];
             const domainName = DOMAINS[question.topic_id] || 'Unknown Domain';
+            const keywords = extractKeywords();
 
             let choicesHtml = '';
             const choices = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
@@ -701,24 +833,24 @@
                 </div>
             ` : '';
 
-            // Show a message about auto-show feature
-            const autoShowMessage = !showingAnswer && !selectedAnswer ? `
+            // Show keyword info if searching
+            const keywordInfo = keywords.length > 0 ? `
                 <div class="auto-show-message">
-                     
+                    🔍 Showing questions containing: <strong>${keywords.join(', ')}</strong>
                 </div>
             ` : '';
 
             document.getElementById('flashcardContainer').innerHTML = `
                 <div class="flashcard">
                     <div class="card-header">
-                        <span class="card-id">Question #${question.id} ${isRandomMode ? '🔀' : ''}</span>
+                        <span class="card-id">Question ${currentIndex + 1} of ${filteredQuestions.length} ${isRandomMode ? '🔀' : ''}</span>
                         <span class="card-domain">${domainName}</span>
                     </div>
-                    <div class="card-subdomain">${question.sub_domain}</div>
+                    ${question.sub_domain ? `<div class="card-subdomain">${question.sub_domain}</div>` : ''}
                     <div class="card-content">${formatText(question.question)}</div>
                     <div class="choices">${choicesHtml}</div>
                     ${explanationHtml}
-                    ${autoShowMessage}
+                    ${keywordInfo}
                     <div class="navigation">
                         <button class="btn btn-secondary" onclick="previousCard()" ${currentIndex === 0 ? 'disabled' : ''}>
                             ← Previous
